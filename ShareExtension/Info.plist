@@ -11,7 +11,14 @@
 				<string>INSendMessageIntent</string>
 			</array>
 			<key>NSExtensionActivationRule</key>
-			<string>TRUEPREDICATE</string>
+			<dict>
+				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+				<integer>2</integer>
+				<key>NSExtensionActivationSupportsMovieWithMaxCount</key>
+				<integer>9</integer>
+				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
+				<integer>9</integer>
+			</dict>
 		</dict>
 		<key>NSExtensionMainStoryboard</key>
 		<string>MainInterface</string>
