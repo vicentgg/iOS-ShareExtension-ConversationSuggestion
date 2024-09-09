@@ -12,12 +12,12 @@
 			</array>
 			<key>NSExtensionActivationRule</key>
 			<dict>
-				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-				<integer>2</integer>
-				<key>NSExtensionActivationSupportsMovieWithMaxCount</key>
-				<integer>9</integer>
 				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
-				<integer>9</integer>
+				<integer>1</integer>
+				<key>NSExtensionActivationSupportsMovieWithMaxCount</key>
+				<integer>0</integer>
+				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+				<integer>1</integer>
 			</dict>
 		</dict>
 		<key>NSExtensionMainStoryboard</key>

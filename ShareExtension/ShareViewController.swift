@@ -10,8 +10,12 @@ import Intents
 import IntentsUI
 import MobileCoreServices
 
-class ShareViewController: UIViewController {
+let SuitName: String = "group.wangjin.com.wangjin.share"
+let ShareImageKey: String = "kShareImageKey"
+let NewShareKey: String  = "kNewShareKey"
 
+class ShareViewController: UIViewController {
+    
     private let selectImageView: UIImageView = {
         let image = UIImageView()
         image.translatesAutoresizingMaskIntoConstraints = false
@@ -27,11 +31,11 @@ class ShareViewController: UIViewController {
         return label
     }()
     
-    private lazy var closeButton: UIButton = {
+    private lazy var confirmButton: UIButton = {
         let button = UIButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.titleLabel?.font = UIFont.systemFont(ofSize: 20)
-        button.setTitle("取消", for: .normal)
+        button.setTitle("确认", for: .normal)
         button.setTitleColor(.black, for: .normal)
         button.backgroundColor = .clear
         button.addTarget(self, action: #selector(closeShare), for: .touchUpInside)
@@ -41,7 +45,6 @@ class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupSubviews()
-        
         let intent = self.extensionContext?.intent as? INSendMessageIntent
         if intent != nil {
             let conversationIdentifier = intent!.conversationIdentifier
@@ -69,6 +72,7 @@ class ShareViewController: UIViewController {
                                 case let url as URL:
                                     print("url: ", url.path)
                                     selectImage = UIImage(contentsOfFile: url.path)
+                                    self?.setImagePathInUD(with: selectImage)
                                 default:
                                     print("Unexpected data:", type(of: data))
                                     selectImage = nil
@@ -95,24 +99,46 @@ class ShareViewController: UIViewController {
         self.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
     }
     
+    private func setImagePathInUD(with image: UIImage?) {
+        let ud = UserDefaults.init(suiteName: SuitName)
+        if let image, let data = image.jpegData(compressionQuality: 0.5) {
+            ud?.setValue(data, forKey: ShareImageKey)
+            ud?.setValue(true, forKey: NewShareKey)
+            ud?.synchronize()
+        }
+    }
+    
     @objc
     private func closeShare() {
+        guard let url = URL(string: "conversationsuggestion://") else { return }
+        let context = NSExtensionContext()
+        context.open(url, completionHandler: nil)
+        var responder = self as UIResponder?
+        let selectorOpenURL = sel_registerName("openURL:")
+        while (responder != nil) {
+            if responder!.responds(to: selectorOpenURL) {
+                responder!.perform(selectorOpenURL, with: url)
+                break
+            }
+            responder = responder?.next
+        }
+        self.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
     }
     
     private func setupSubviews() {
         view.backgroundColor = .white
-        view.addSubview(closeButton)
+        view.addSubview(confirmButton)
         view.addSubview(selectImageView)
         view.addSubview(selectTitleLabel)
         
         NSLayoutConstraint.activate([
-            closeButton.heightAnchor.constraint(equalToConstant: 40),
-            closeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5),
-            closeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 10),
-            closeButton.widthAnchor.constraint(equalToConstant: 50),
+            confirmButton.heightAnchor.constraint(equalToConstant: 40),
+            confirmButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5),
+            confirmButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 10),
+            confirmButton.widthAnchor.constraint(equalToConstant: 50),
             
             selectImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            selectImageView.topAnchor.constraint(equalTo: closeButton.bottomAnchor),
+            selectImageView.topAnchor.constraint(equalTo: confirmButton.bottomAnchor),
             selectImageView.bottomAnchor.constraint(equalTo: view.centerYAnchor, constant: 100),
             selectImageView.widthAnchor.constraint(equalTo: view.widthAnchor),
             
