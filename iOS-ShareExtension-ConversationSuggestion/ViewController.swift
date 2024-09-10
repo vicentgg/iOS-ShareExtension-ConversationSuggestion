@@ -21,6 +21,8 @@ class ViewController: UIViewController {
         return imageView
     }()
     
+    private var handleImageDataQueue: DispatchQueue = DispatchQueue(label: "kShareExtension_handleImageDataQueue")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -42,10 +44,27 @@ class ViewController: UIViewController {
     
     @objc
     private func showShareImage() {
-        let ud = UserDefaults(suiteName: SuitName)
-        if let isNewShareImage = ud?.bool(forKey: NewShareKey), isNewShareImage {
-            if let data = ud?.data(forKey: ShareImageKey) {
-                imageView.image = UIImage(data: data)
+//        let ud = UserDefaults(suiteName: SuitName)
+//        if let isNewShareImage = ud?.bool(forKey: NewShareKey), isNewShareImage {
+//            if let data = ud?.data(forKey: ShareImageKey) {
+//                imageView.image = UIImage(data: data)
+//            }
+//        }
+        
+        let manager = FileManager.default
+        guard let groupURL = manager.containerURL(forSecurityApplicationGroupIdentifier: SuitName) else {
+            return
+        }
+        
+        handleImageDataQueue.async { [weak self] in
+            let fileDirURL = groupURL.appendingPathComponent("share")
+            if let fileName = manager.subpaths(atPath: fileDirURL.path)?.first {
+                let fileDir = fileDirURL.appendingPathComponent(fileName)
+                if let data = manager.contents(atPath: fileDir.path) {
+                    DispatchQueue.main.async {
+                        self?.imageView.image = UIImage(data: data)
+                    }
+                }
             }
         }
     }

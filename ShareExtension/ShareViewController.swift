@@ -42,6 +42,8 @@ class ShareViewController: UIViewController {
         return button
     }()
     
+    private var handleImageDataQueue: DispatchQueue = DispatchQueue(label: "kShareExtension_handleImageDataQueue")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupSubviews()
@@ -55,6 +57,7 @@ class ShareViewController: UIViewController {
         guard let inputItems = self.extensionContext?.inputItems as? [NSExtensionItem], inputItems.count > 0 else {
             return
         }
+        
         inputItems.forEach {
             if let attachments = $0.attachments {
                 attachments.forEach {
@@ -72,7 +75,7 @@ class ShareViewController: UIViewController {
                                 case let url as URL:
                                     print("url: ", url.path)
                                     selectImage = UIImage(contentsOfFile: url.path)
-                                    self?.setImagePathInUD(with: selectImage)
+                                    self?.setImagePathInFileManager(with: url, selectImage)
                                 default:
                                     print("Unexpected data:", type(of: data))
                                     selectImage = nil
@@ -105,6 +108,38 @@ class ShareViewController: UIViewController {
             ud?.setValue(data, forKey: ShareImageKey)
             ud?.setValue(true, forKey: NewShareKey)
             ud?.synchronize()
+        }
+    }
+    
+    private func setImagePathInFileManager(with url: URL, _ image: UIImage?) {
+        let manager = FileManager.default
+        guard let groupURL = manager.containerURL(forSecurityApplicationGroupIdentifier: SuitName), let image else {
+            return
+        }
+        
+        handleImageDataQueue.async {
+            let fileDirURL = groupURL.appendingPathComponent("share")
+            var isDir: ObjCBool = ObjCBool(false)
+            let isExistDir = manager.fileExists(atPath: fileDirURL.path, isDirectory: &isDir)
+            if !isExistDir {
+                do {
+                    try manager.createDirectory(at: fileDirURL, withIntermediateDirectories: true)
+                } catch {
+                    print("create Directory error \(error)")
+                }
+            }
+            
+            let fileURL = fileDirURL.appendingPathComponent("image1")
+            let exist = FileManager.default.fileExists(atPath: fileURL.path)
+            if let data = image.pngData() {
+                if exist {
+                    try! manager.removeItem(at: fileURL)
+                }
+                if manager.createFile(atPath: fileURL.path, contents: data) {
+                    print("create File Success")
+                    
+                }
+            }
         }
     }
     
