@@ -50,8 +50,9 @@ class ShareViewController: UIViewController {
         let intent = self.extensionContext?.intent as? INSendMessageIntent
         if intent != nil {
             let conversationIdentifier = intent!.conversationIdentifier
+            let conversationName = intent?.speakableGroupName ?? .init(spokenPhrase: "User")
             print("\nconversationIdentifier: \(conversationIdentifier as Any)")
-            selectTitleLabel.text = conversationIdentifier
+            selectTitleLabel.text = String(describing: conversationName)
         }
         
         guard let inputItems = self.extensionContext?.inputItems as? [NSExtensionItem], inputItems.count > 0 else {
